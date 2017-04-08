@@ -1,2 +1,4 @@
-config-gmaps
-node_modules/
+
+node_modules
+.env
+

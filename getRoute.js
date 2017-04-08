@@ -1,30 +1,31 @@
+'use strict';
+
 var Promise = require('es6-promise').Promise,
-    googlemaps = require('googlemaps'),
+    Googlemaps = require('googlemaps'),
     polyline = require('polyline'),
     geojson = require('geojson'),
     fs = require('fs'),
     util = require('util');
 
-var output = "", // name of the output file
-    start = "",
-    end = "",
+var output = "mia_rotta.geojson", // name of the output file
+    start = "Via Respigi, 6, 21017 Samarate, IT",
+    end = "Via Valtellina, 68, 20159 Milano",
     // waypoints is a string with values separated by |
     waypoints = "";
 
-var apiKey = fs.readFile('config-gmaps', function(err, data){
-  if (err) {
-    util.error(err);
-  }
-  return data;
-});
+var env = require('env2')('./.env');
 
-googlemaps.config({'key': apiKey});
+var apiKey = process.env.GMAP_KEY;
+
+console.log('>> apiKey:', apiKey);
+
+var googlemaps = new Googlemaps({'key': apiKey});
 
 function getGoogleRouteInformation(origin, destination, waypoints) {
   return new Promise(function(resolve, reject){
 
     if (!origin || !destination) {
-      util.error('Origin and destination required!')
+      console.error('Origin and destination required!')
     }
 
     function handleResponse(err, data) {
@@ -35,17 +36,19 @@ function getGoogleRouteInformation(origin, destination, waypoints) {
       }
     };
 
-    googlemaps.directions(origin, destination, handleResponse, false, false, waypoints);
+    var params = {origin: origin,destination: destination, waypoints: waypoints};
+    googlemaps.directions(params, handleResponse);
     });
 }
 
 function handleError(err) {
-  util.error(err);
+  console.error(err);
 };
 
 getGoogleRouteInformation(start, end, waypoints)
 // Decode the polyline info from Google
 .then(function(data){
+
   var encodedPolyline = data.routes[0].overview_polyline,
       decodedPolyline;
 
@@ -86,7 +89,7 @@ getGoogleRouteInformation(start, end, waypoints)
 
   fs.writeFile('geojson/' + output + '.geojson', JSON.stringify(geoData, null, 2));
 
-  util.puts('Successfully created file ' + output)
+  console.log('Successfully created file ' + output)
 
 }, handleError)
 .catch(handleError);
