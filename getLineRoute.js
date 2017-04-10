@@ -7,7 +7,7 @@ var Promise = require('es6-promise').Promise,
     fs = require('fs'),
     util = require('util');
 
-var output = "mia_rotta", // name of the output file
+var output = "mia_line_rotta", // name of the output file
     start = "Via Respigi, 6, 21017 Samarate, IT",
     end = "Via Valtellina, 68, 20159 Milano",
     // waypoints is a string with values separated by |
@@ -64,10 +64,7 @@ getGoogleRouteInformation(start, end, waypoints)
 
   points.forEach(function(rawPoints){
 
-    var value = {
-      'lat': rawPoints[0],
-      'lng': rawPoints[1]
-    };
+    var value = [rawPoints[1], rawPoints[0]];
 
     return normalized.push(value);
 
@@ -78,8 +75,14 @@ getGoogleRouteInformation(start, end, waypoints)
 }, handleError)
 // Encode the array into proper geoJSON
 .then(function(normalizedPoints){
+  
+  var data = {
+    line: normalizedPoints,
+    start: start,
+    end: end
+  };
 
-  var geoData = geojson.parse(normalizedPoints, {Point: ['lat', 'lng']});
+  var geoData = geojson.parse(data, { 'LineString': 'line' });
 
   return geoData;
 
